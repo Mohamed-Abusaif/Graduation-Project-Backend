@@ -11,18 +11,18 @@ router.get("/instructorLogin", authController.getInstructorLoginForm);
 router.get("/studentRegister", authController.getStudentSignupForm);
 router.get("/instructorRegister", authController.getInstructorSingupForm);
 
-router.post("/studentLogin", (req, res) => {
-  const userEmail = req.body.userEmail;
-  const userPassword = req.body.userPassword;
-  const sql = `select * from student where email = '${userEmail}';`;
-  pool.query(sql, (err, result) => {
-    if (err) throw err;
-    console.log(result);
-    return result;
-  });
-  res.redirect("/");
-});
-router.post("/instructorLogin", (req, res) => {});
+const session = require("express-session");
+
+router.use(
+  session({
+    secret: "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+router.post("/studentLogin", authController.studentLogin);
+router.post("/instructorLogin", authController.instructorLogin);
 
 router.post("/studentRegister", authController.studentRegister);
 router.post("/instructorRegister", authController.instructorRegister);

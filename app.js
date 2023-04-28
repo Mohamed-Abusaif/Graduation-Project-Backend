@@ -1,6 +1,9 @@
 const express = require("express");
 const path = require("path");
+const session = require("express-session");
 const bodyParser = require("body-parser");
+const mysqlStore = require('express-mysql-session')(session);
+
 const db = require("./data/dbConnection");
 const homeRoute = require("./routes/homePage");
 const instructorRoute = require("./routes/instructor");
@@ -13,6 +16,13 @@ app.use(authRoute);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  session({
+    secret: "My Secret Example",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 app.set("view engine", "ejs");
 app.set("views", "views");
 

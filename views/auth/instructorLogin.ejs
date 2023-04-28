@@ -38,13 +38,14 @@
             />
           </div>
           <div class="col-md-7 col-lg-5 col-xl-5 offset-xl-1">
-            <form>
+            <form action="/instructorLogin" method="post">
               <!-- Email input -->
               <div class="form-outline mb-4">
                 <input
                   type="email"
                   id="form1Example13"
                   class="form-control form-control-lg emailField"
+                  name="userEmail"
                 />
                 <label class="form-label" for="form1Example13"
                   >Email address</label
@@ -57,6 +58,7 @@
                   type="password"
                   id="form1Example23"
                   class="form-control form-control-lg passwordField"
+                  name="userPassword"
                 />
                 <label class="form-label" for="form1Example23">Password</label>
               </div>
