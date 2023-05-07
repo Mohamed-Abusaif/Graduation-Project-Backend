@@ -7,27 +7,18 @@ const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 const pool = require("../data/dbConnection");
 
-router.post("/instructorSignUp");
+
+
 
 router.get(
-  "/studentsEnrolledInInstCourse",
-  instructorIsAuth,
-  instructorController.studentsEnrolledInInstCourse
-);
-router.get(
-  "/showInstructorCourses",
-  instructorIsAuth,
-  instructorController.showInstructorCourses
-);
-router.get(
-  "/showAccountInfo",
-  instructorIsAuth,
-  instructorController.showAccountInfo
+  "/instructorHomeProfile/:id",
+  instructorController.instructorHomeProfile
 );
 router.post(
   "/editAccountInfo",
-  instructorIsAuth,
   instructorController.editAccountInfo
 );
+
+router.get("")
 
 module.exports = router;

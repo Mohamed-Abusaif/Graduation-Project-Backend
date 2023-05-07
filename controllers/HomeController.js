@@ -1,7 +1,7 @@
 const path = require("path");
 
 exports.getHomePage = (req, res, nxt) => {
-  res.render("home.ejs", {
+  res.render("../views/home/index.ejs", {
     pageTitle: "Home Page!",
     path: "/"
   });

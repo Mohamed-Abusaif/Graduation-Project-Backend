@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Add Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/css/bootstrap.min.css">
+    <title>Instructor Home</title>
+  </head>
+  <body>
+    <h1>Account Info:</h1>
+    <p>User ID: <%= instructorData[0].idinstructor %></p>
+    <p>First Name: <%= instructorData[0].first_name %></p>
+    <p>Last Name: <%= instructorData[0].last_name %></p>
+    <p>Email: <%= instructorData[0].email %></p>
+    <h1>Your Courses:</h1>
+    <ul>
+      <% coursesData.forEach(course => { %>
+        <li>
+          <%= course.course_title %>
+          <!-- Add "Show Course" button -->
+          <a href="/courses/<%= course.id %>" class="btn btn-primary" role="button">Show Course</a>
+          <!-- Add "Edit Course" button -->
+          <a href="/courses/<%= course.id %>/edit" class="btn btn-primary">Edit Course</a>
+        </li>
+      <% }) %>
+    </ul>
+    <!-- Add Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
