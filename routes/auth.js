@@ -22,4 +22,12 @@ router.post("/studentLogin", authController.studentLogin);
 router.post("/instructorLogin", authController.instructorLogin);
 router.post("/studentRegister", authController.studentRegister);
 router.post("/instructorRegister", authController.instructorRegister);
+
+
+//using jwt 
+
+const login = async (req,res)=>{
+  res.send("face login register route")
+}
+
 module.exports = router;
