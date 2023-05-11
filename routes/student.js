@@ -6,6 +6,8 @@ const studentController = require("../controllers/studentController");
 const studentIsAuth = require("../middlewares/studentIsAuth");
 
 const router = express.Router();
+router.use(express.json());
+
 router.use(bodyParser.urlencoded({ extended: false }));
 
 router.get("/showCourses", (req, res) => {
