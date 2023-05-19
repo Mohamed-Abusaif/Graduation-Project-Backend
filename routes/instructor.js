@@ -1,8 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const instructorController = require("../controllers/instructorController");
 const instructorIsAuth = require("../middlewares/instructorIsAuth");
@@ -129,7 +129,7 @@ router.post(
       course_chapter_idcourse_chapter: sectionId,
       content_type_idcontent_type,
       pathToContent: file.path, // Save the file path to the database
-      contentItself: fileContent // Save the file content to the database
+      contentItself: fileContent, // Save the file content to the database
     };
 
     pool.query(
@@ -147,5 +147,80 @@ router.post(
     );
   }
 );
+
+// Search course by name
+router.get("/courses/search/:courseName", (req, res) => {
+  const courseName = req.params.courseName;
+  const sql = `SELECT * FROM course WHERE course_title LIKE '%${courseName}%';`;
+  pool.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error searching for courses:", err);
+      res.status(500).json({ error: "Failed to search for courses" });
+      return;
+    }
+    console.log("Courses found:", result);
+    res.json(result);
+  });
+});
+
+//search instructor courses
+router.get("/instructorCourses/:userId/search", (req, res) => {
+  const userId = req.params.userId;
+  const courseName = req.query.courseName;
+  console.log(courseName);
+  const sql = `
+    SELECT c.*
+    FROM instructor AS i
+    JOIN course AS c ON i.idinstructor = c.instructor_id
+    WHERE i.idinstructor = ${userId}
+    AND c.course_title LIKE '%${courseName}%';
+  `;
+
+  pool.query(sql, (err, result) => {
+    if (err) {
+      console.error("Error searching for instructor courses:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to search for instructor courses" });
+      return;
+    }
+    console.log("Instructor courses found:", result);
+    res.json(result);
+  });
+});
+
+// Edit a course details
+router.put("/courses/:courseId", (req, res) => {
+  const courseId = req.params.courseId;
+  const {
+    course_title,
+    course_brief,
+    num_of_chapters,
+    course_fee,
+    instructor_id,
+  } = req.body;
+
+  const updatedCourse = {
+    course_title,
+    course_brief,
+    num_of_chapters,
+    course_fee,
+    instructor_id,
+  };
+
+  pool.query(
+    "UPDATE course SET ? WHERE idcourse = ?",
+    [updatedCourse, courseId],
+    (err, result) => {
+      if (err) {
+        console.error("Error updating the course:", err);
+        res.status(500).json({ error: "Failed to update the course" });
+        return;
+      }
+      console.log("Course updated successfully");
+      res.status(200).json({ message: "Course updated successfully" });
+    }
+  );
+});
 
 module.exports = router;

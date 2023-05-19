@@ -5,143 +5,181 @@
 const express = require("express");
 const pool = require("../data/dbConnection");
 const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 
-exports.getStudentLoginForm = (req, res) => {
-  res.render("auth/studentLogin.ejs", {
-    pageTitle: "Login as Student!",
-  });
-};
-
-exports.getInstructorLoginForm = (req, res) => {
-  res.render("auth/instructorLogin.ejs", {
-    pageTitle: "Login as Instructor!",
-  });
-};
-
-exports.getStudentSignupForm = (req, res) => {
-  res.render("auth/studentRegister.ejs", {
-    pageTitle: "Sign Up as Student!",
-  });
-};
-
-exports.getInstructorSingupForm = (req, res) => {
-  res.render("auth/instructorRegister.ejs", {
-    pageTitle: "Sign Up as Instructor!",
-  });
-};
-
 exports.studentRegister = (req, res) => {
-  const firstName = req.body.first_name;
-  const lastName = req.body.last_name;
-  const userEmail = req.body.userEmail;
-  const userPassword = req.body.userPassword;
-  const confirmPassword = req.body.confirmPassword;
+  // Retrieve student registration data from the request body
+  const { email, password, first_name, last_name } = req.body;
 
-  const sql = `select * from student where email = '${userEmail}';`;
-  pool.query(sql, (err, result) => {
+  // Hash the password
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
-      throw err;
-    } else {
-      console.log(result);
-      if (result.length >= 1) {
-        console.error("user exists");
-      } else {
-        console.log("now we can add the user");
-        if (userPassword !== confirmPassword) {
-          console.log("the two passwords not matching");
-        } else {
-          const sql = `insert into student (first_name , last_name , email , password) 
-          values ('${firstName}' , '${lastName}' , '${userEmail}' , '${userPassword}');`;
-          pool.query(sql, (err, result) => {
-            if (err) {
-              throw err;
-            } else {
-              console.log("user inserted successfully!");
-            }
-          });
-        }
-      }
+      console.error("Error hashing password:", err);
+      res.status(500).json({ error: "Failed to register student" });
+      return;
     }
-  });
 
-  res.redirect("/studentLogin");
-};
+    // Save the student to the database with the hashed password
+    const student = {
+      email,
+      password: hashedPassword,
+      first_name,
+      last_name,
+    };
 
-exports.instructorRegister = (req, res) => {
-  const firstName = req.body.first_name;
-  const lastName = req.body.last_name;
-  const userEmail = req.body.userEmail;
-  const userPassword = req.body.userPassword;
-  const confirmPassword = req.body.confirmPassword;
-
-  const sql = `select * from instructor where email = '${userEmail}';`;
-  pool.query(sql, (err, result) => {
-    if (err) {
-      throw err;
-    } else {
-      console.log(result);
-      if (result.length >= 1) {
-        console.error("user exists");
-      } else {
-        console.log("now we can add the user");
-        if (userPassword !== confirmPassword) {
-          console.log("the two passwords not matching");
-        } else {
-          const sql = `insert into instructor (first_name , last_name , email , password) 
-          values ('${firstName}' , '${lastName}' , '${userEmail}' , '${userPassword}');`;
-          pool.query(sql, (err, result) => {
-            if (err) {
-              throw err;
-            } else {
-              console.log("user inserted successfully!");
-            }
-          });
-        }
+    // Save the student to the database
+    pool.query("INSERT INTO student SET ?", student, (err, result) => {
+      if (err) {
+        console.error("Error saving student:", err);
+        res.status(500).json({ error: "Failed to register student" });
+        return;
       }
-    }
-  });
 
-  res.redirect("/instructorLogin");
+      // Generate a JWT token for the student
+      const token = jwt.sign(
+        { userId: result.insertId, role: "student" },
+        "secret-key",
+        { expiresIn: "1h" }
+      );
+
+      res
+        .status(201)
+        .json({ message: "Student registered successfully", token });
+    });
+  });
 };
 
 exports.studentLogin = (req, res) => {
-  const userEmail = req.body.userEmail;
-  const userPassword = req.body.userPassword;
-  const sql = `select * from student where email = '${userEmail}';`;
-  pool.query(sql, (err, result) => {
-    if (err) throw err;
-    console.log(result);
-    if (result[0].password === userPassword) {
-      // Set up session for logged-in user
-      req.session.userId = result[0].id;
-      req.session.studentIsLoggedIn = true;
-      console.log("user Exists and now logged in successfully!");
-      res.redirect("/");
-    } else {
-      console.log("passowrd is wrong");
-      res.redirect("/studentLogin");
+  // Retrieve student login data from the request body
+  const { email, password } = req.body;
+
+  // Find the student in the database by email
+  pool.query("SELECT * FROM student WHERE email = ?", email, (err, results) => {
+    if (err) {
+      console.error("Error retrieving student:", err);
+      res.status(500).json({ error: "Failed to login" });
+      return;
     }
+
+    // Check if a student with the provided email exists in the database
+    if (results.length === 0) {
+      res.status(401).json({ error: "Invalid email or password" });
+      return;
+    }
+
+    // Retrieve the student's data from the database
+    const student = results[0];
+
+    // Compare the provided password with the stored hashed password
+    bcrypt.compare(password, student.password, (err, result) => {
+      if (err || !result) {
+        // Invalid credentials
+        res.status(401).json({ error: "Invalid email or password" });
+        return;
+      }
+
+      // Generate a JWT token for the student
+      const token = jwt.sign(
+        { userId: student.id, role: "student" },
+        "secret-key",
+        { expiresIn: "1h" }
+      );
+
+      res
+        .status(200)
+        .json({ message: "Student logged in successfully", token });
+    });
+  });
+};
+
+exports.instructorRegister = (req, res) => {
+  // Retrieve instructor registration data from the request body
+  const { email, password, first_name, last_name } = req.body;
+
+  // Hash the password
+  bcrypt.hash(password, 10, (err, hashedPassword) => {
+    if (err) {
+      console.error("Error hashing password:", err);
+      res.status(500).json({ error: "Failed to register instructor" });
+      return;
+    }
+
+    // Save the instructor to the database with the hashed password
+    const instructor = {
+      email,
+      password: hashedPassword,
+      first_name,
+      last_name,
+    };
+
+    // Save the instructor to the database
+    pool.query("INSERT INTO instructor SET ?", instructor, (err, result) => {
+      if (err) {
+        console.error("Error saving instructor:", err);
+        res.status(500).json({ error: "Failed to register instructor" });
+        return;
+      }
+
+      // Generate a JWT token for the instructor
+      const token = jwt.sign(
+        { userId: result.insertId, role: "instructor" },
+        "secret-key",
+        { expiresIn: "1h" }
+      );
+
+      res
+        .status(201)
+        .json({ message: "Instructor registered successfully", token });
+    });
   });
 };
 
 exports.instructorLogin = (req, res) => {
-  const userEmail = req.body.userEmail;
-  const userPassword = req.body.userPassword;
-  const sql = `select * from instructor where email = '${userEmail}';`;
-  pool.query(sql, (err, result) => {
-    if (err) throw err;
-    console.log(result);
-    if (result[0].password === userPassword) {
-      // Set up session for logged-in user
-      req.session.userId = result[0].id;
-      req.session.instructorIsLoggedIn = true;
-      console.log("user Exists and now logged in successfully!");
-      res.redirect("/");
-    } else {
-      console.log("passowrd is wrong");
-      res.redirect("/");
+  // Retrieve instructor login data from the request body
+  const { email, password } = req.body;
+
+  // Find the instructor in the database by email
+  pool.query(
+    "SELECT * FROM instructor WHERE email = ?",
+    email,
+    (err, results) => {
+      if (err) {
+        console.error("Error retrieving instructor:", err);
+        res.status(500).json({ error: "Failed to login" });
+        return;
+      }
+
+      // Check if an instructor with the provided email exists in the database
+      if (results.length === 0) {
+        res.status(401).json({ error: "Invalid email or password" });
+        return;
+      }
+
+      // Retrieve the instructor's data from the database
+      const instructor = results[0];
+
+      // Compare the provided password with the stored hashed password
+      bcrypt.compare(password, instructor.password, (err, result) => {
+        if (err || !result) {
+          // Invalid credentials
+          res.status(401).json({ error: "Invalid email or password" });
+          return;
+        }
+
+        // Generate a JWT token for the instructor
+        const token = jwt.sign(
+          { userId: instructor.id, role: "instructor" },
+          "secret-key",
+          { expiresIn: "1h" }
+        );
+
+        res
+          .status(200)
+          .json({ message: "Instructor logged in successfully", token });
+      });
     }
-  });
+  );
 };
