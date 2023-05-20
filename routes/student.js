@@ -158,7 +158,7 @@ router.post("/chooseInterests", async (req, res) => {
 
   try {
     const response = await axios.post(
-      "https://36bf-197-62-29-20.ngrok-free.app/recommend",
+      "https://aeaa-159-223-191-226.ngrok-free.app/recommend",
       requestData
     );
     console.log("Recommendation system response:", response.data);
