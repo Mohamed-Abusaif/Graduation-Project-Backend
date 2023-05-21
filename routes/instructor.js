@@ -110,16 +110,11 @@ router.post(
     const file = req.file;
     const sectionId = req.params.sectionId;
 
-    // Read the file content
-    const filePath = path.join(__dirname, "..", file.path);
-    const fileContent = fs.readFileSync(filePath);
-
     const {
       is_mandatory,
       time_required_in_sec,
       is_open_for_free,
       content_type_idcontent_type,
-      pathToContent,
     } = req.body;
 
     const content = {
@@ -128,8 +123,8 @@ router.post(
       is_open_for_free,
       course_chapter_idcourse_chapter: sectionId,
       content_type_idcontent_type,
-      pathToContent: file.path, // Save the file path to the database
-      contentItself: fileContent, // Save the file content to the database
+      pathToContent: file.filename, // Save the file path to the database
+      contentItself: null, // Set contentItself to null as the content is saved in the server
     };
 
     pool.query(
