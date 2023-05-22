@@ -38,16 +38,21 @@ exports.studentRegister = (req, res) => {
         return;
       }
 
+      // Retrieve the inserted student_id
+      const studentId = result.insertId;
+
       // Generate a JWT token for the student
       const token = jwt.sign(
-        { userId: result.insertId, role: "student" },
+        { studentId, role: "student" }, // Include studentId in the token payload
         "secret-key",
         { expiresIn: "1h" }
       );
 
-      res
-        .status(201)
-        .json({ message: "Student registered successfully", token });
+      res.status(201).json({
+        message: "Student registered successfully",
+        token,
+        student_id: studentId, // Include student_id in the response
+      });
     });
   });
 };
@@ -83,14 +88,16 @@ exports.studentLogin = (req, res) => {
 
       // Generate a JWT token for the student
       const token = jwt.sign(
-        { userId: student.id, role: "student" },
+        { studentId: student.id, role: "student" }, // Include studentId in the token payload
         "secret-key",
         { expiresIn: "1h" }
       );
 
-      res
-        .status(200)
-        .json({ message: "Student logged in successfully", token });
+      res.status(200).json({
+        message: "Student logged in successfully",
+        token,
+        student_id: student.idstudent, // Include student_id in the response
+      });
     });
   });
 };
@@ -123,20 +130,24 @@ exports.instructorRegister = (req, res) => {
         return;
       }
 
+      // Retrieve the inserted instructor_id
+      const instructorId = result.insertId;
+
       // Generate a JWT token for the instructor
       const token = jwt.sign(
-        { userId: result.insertId, role: "instructor" },
+        { instructorId, role: "instructor" }, // Include instructorId in the token payload
         "secret-key",
         { expiresIn: "1h" }
       );
 
-      res
-        .status(201)
-        .json({ message: "Instructor registered successfully", token });
+      res.status(201).json({
+        message: "Instructor registered successfully",
+        token,
+        instructor_id: instructorId, // Include instructor_id in the response
+      });
     });
   });
 };
-
 exports.instructorLogin = (req, res) => {
   // Retrieve instructor login data from the request body
   const { email, password } = req.body;
@@ -171,14 +182,16 @@ exports.instructorLogin = (req, res) => {
 
         // Generate a JWT token for the instructor
         const token = jwt.sign(
-          { userId: instructor.id, role: "instructor" },
+          { instructorId: instructor.id, role: "instructor" }, // Include instructorId in the token payload
           "secret-key",
           { expiresIn: "1h" }
         );
 
-        res
-          .status(200)
-          .json({ message: "Instructor logged in successfully", token });
+        res.status(200).json({
+          message: "Instructor logged in successfully",
+          token,
+          instructor_id: instructor.idinstructor, // Include instructor_id in the response
+        });
       });
     }
   );
