@@ -2,6 +2,7 @@ const mysql = require("mysql2");
 
 const pool = mysql.createPool({
   connectionLimit: 100, //important
+  port: '/var/run/mysqld/mysqld.sock',
   host: "localhost",
   user: "root",
   password: "root",
