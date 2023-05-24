@@ -11,11 +11,16 @@ const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(express.json());
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
+  destination: 'uploads/',
+  filename: function (req, file, cb) {
+    // Generate a unique ID for the file
+    const uniqueId = Date.now().toString();
+    // Extract the file extension
+    const ext = path.extname(file.originalname);
+    // Set the file name to be the unique ID with the original extension
+    const fileName = uniqueId + ext;
+    // Pass the generated file name to the callback function
+    cb(null, fileName);
   },
 });
 
@@ -102,46 +107,37 @@ router.post("/courses/:courseId/sections", (req, res) => {
   });
 });
 
-// Add content to a section
-router.post(
-  "/sections/:sectionId/content",
-  upload.single("file"),
-  (req, res) => {
-    const file = req.file;
-    const sectionId = req.params.sectionId;
+router.post('/sections/:sectionId/content', upload.single('file'), (req, res) => {
+  const file = req.file;
+  const sectionId = req.params.sectionId;
 
-    const {
-      is_mandatory,
-      time_required_in_sec,
-      is_open_for_free,
-      content_type_idcontent_type,
-    } = req.body;
+  const {
+    is_mandatory,
+    time_required_in_sec,
+    is_open_for_free,
+    content_type_idcontent_type,
+  } = req.body;
 
-    const content = {
-      is_mandatory,
-      time_required_in_sec,
-      is_open_for_free,
-      course_chapter_idcourse_chapter: sectionId,
-      content_type_idcontent_type,
-      pathToContent: file.filename, // Save the file path to the database
-      contentItself: null, // Set contentItself to null as the content is saved in the server
-    };
+  const content = {
+    is_mandatory,
+    time_required_in_sec,
+    is_open_for_free,
+    course_chapter_idcourse_chapter: sectionId,
+    content_type_idcontent_type,
+    pathToContent: file.filename,
+    contentItself: null,
+  };
 
-    pool.query(
-      "INSERT INTO course_chpater_content SET ?",
-      content,
-      (err, result) => {
-        if (err) {
-          console.error("Error adding the content:", err);
-          res.status(500).json({ error: "Failed to add the content" });
-          return;
-        }
-        console.log("Content added successfully");
-        res.status(201).json({ message: "Content added successfully" });
-      }
-    );
-  }
-);
+  pool.query('INSERT INTO course_chpater_content SET ?', content, (err, result) => {
+    if (err) {
+      console.error('Error adding the content:', err);
+      res.status(500).json({ error: 'Failed to add the content' });
+      return;
+    }
+    console.log('Content added successfully');
+    res.status(201).json({ message: 'Content added successfully' });
+  });
+});
 
 // Search course by name
 router.get("/courses/search/:courseName", (req, res) => {
