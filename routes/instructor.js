@@ -48,33 +48,52 @@ router.get("/instructorProfile/:userId", (req, res) => {
   });
 });
 // Add a course
-router.post("/courses", (req, res) => {
+router.post("/instructors/:instructorId/courses", (req, res) => {
   const {
     course_title,
     course_brief,
     num_of_chapters,
     course_fee,
-    instructor_id,
   } = req.body;
+  
+  const instructorId = req.params.instructorId;
 
   const course = {
     course_title,
     course_brief,
     num_of_chapters,
     course_fee,
-    instructor_id,
+    instructor_id: instructorId,
   };
   console.log(course);
-  pool.query("INSERT INTO course SET ?", course, (err, result) => {
+
+  // First, check if the specified instructor exists
+  pool.query("SELECT * FROM instructor WHERE idInstructor = ?", [instructorId], (err, rows) => {
     if (err) {
-      console.error("Error adding the course:", err);
-      res.status(500).json({ error: "Failed to add the course" });
+      console.error("Error retrieving instructor:", err);
+      res.status(500).json({ error: "Failed to retrieve instructor" });
       return;
     }
-    console.log("Course added successfully");
-    res.status(201).json({ message: "Course added successfully" });
+
+    if (rows.length === 0) {
+      // The specified instructor doesn't exist
+      res.status(404).json({ error: "Instructor not found" });
+      return;
+    }
+
+    // The specified instructor exists, proceed to add the course
+    pool.query("INSERT INTO course SET ?", course, (err, result) => {
+      if (err) {
+        console.error("Error adding the course:", err);
+        res.status(500).json({ error: "Failed to add the course" });
+        return;
+      }
+      console.log("Course added successfully");
+      res.status(201).json({ message: "Course added successfully" });
+    });
   });
 });
+
 
 // Add a section to a course
 router.post("/courses/:courseId/sections", (req, res) => {

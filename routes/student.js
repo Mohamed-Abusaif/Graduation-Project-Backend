@@ -239,13 +239,12 @@ router.post("/chooseInterests", async (req, res) => {
     console.log("Recommendation system response:", response.data);
 
     const recommendedCourses = response.data;
-    console.log(recommendedCourses["Course Name"])
+    console.log(recommendedCourses["Course Name"]);
     res.json(recommendedCourses);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 module.exports = router;
