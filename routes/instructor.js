@@ -48,7 +48,7 @@ router.get("/instructorProfile/:userId", (req, res) => {
   });
 });
 // Add a course
-router.post("/instructors/:instructorId/courses", (req, res) => {
+router.post("/instructors/:instructorId/addCourses", (req, res) => {
   const {
     course_title,
     course_brief,
@@ -174,8 +174,8 @@ router.get("/courses/search/:courseName", (req, res) => {
   });
 });
 
-//search instructor courses
-router.get("/instructors/:instructorId/courses", (req, res) => {
+//get instructor courses
+router.get("/instructors/:instructorId/getCourses", (req, res) => {
   const instructorId = req.params.instructorId;
 
   const sql = `
