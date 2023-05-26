@@ -212,39 +212,86 @@ router.get("/studentInterests/:studentId", (req, res) => {
     }
   });
 });
-//recommendation system
+// ...
+// ...
+// ...
+
 router.post("/chooseInterests", async (req, res) => {
   const interests = req.body.interests;
-  const student_id = req.body.student_id;
-
-  for (let i = 0; i < interests.length; i++) {
-    const sql = `INSERT INTO interests (intrests, student_id) VALUES (?, ?)`;
-    pool.query(sql, [interests[i], student_id], (err, result) => {
-      if (err) throw err;
-      else {
-        console.log("Data inserted successfully");
-      }
-    });
-  }
-
-  const requestData = {
-    interests: interests,
-  };
+  const studentId = req.body.student_id;
 
   try {
+    const requestData = {
+      interests: interests,
+    };
+
     const response = await axios.post(
       "https://aeaa-159-223-191-226.ngrok-free.app/recommend",
       requestData
     );
-    console.log("Recommendation system response:", response.data);
 
-    const recommendedCourses = response.data;
-    console.log(recommendedCourses["Course Name"]);
-    res.json(recommendedCourses);
+    const recommendedCourses = Object.values(response.data);
+    console.log(recommendedCourses);
+
+    const insertPromises = recommendedCourses.map((course) => {
+      const courseData = JSON.stringify(course);
+      const sql =
+        "INSERT INTO student_recommended_courses (studentId, CourseData) " +
+        "SELECT ?, ? FROM DUAL WHERE NOT EXISTS " +
+        "(SELECT * FROM student_recommended_courses WHERE studentId = ? AND CourseData = ?)";
+      return new Promise((resolve, reject) => {
+        pool.query(
+          sql,
+          [studentId, courseData, studentId, courseData],
+          (err, result) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+      });
+    });
+
+    Promise.all(insertPromises)
+      .then(() => {
+        console.log("Data inserted successfully");
+        res.json(recommendedCourses);
+      })
+      .catch((error) => {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
+      });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 });
+
+// ...
+
+// ...
+
+// ...
+
+// ...
+
+router.get("/recommendedCourses/:studentId", async (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const query = util.promisify(pool.query).bind(pool);
+
+    const sql = `SELECT CourseData FROM student_recommended_courses WHERE studentId = ${studentId}`;
+    const courses = await query(sql);
+
+    res.json(courses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ...
 
 module.exports = router;
