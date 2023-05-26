@@ -95,6 +95,7 @@ router.post("/instructors/:instructorId/courses", (req, res) => {
 });
 
 
+
 // Add a section to a course
 router.post("/courses/:courseId/sections", (req, res) => {
   const courseId = req.params.courseId;
@@ -174,30 +175,27 @@ router.get("/courses/search/:courseName", (req, res) => {
 });
 
 //search instructor courses
-router.get("/instructorCourses/:userId/search", (req, res) => {
-  const userId = req.params.userId;
-  const courseName = req.query.courseName;
-  console.log(courseName);
+router.get("/instructors/:instructorId/courses", (req, res) => {
+  const instructorId = req.params.instructorId;
+
   const sql = `
     SELECT c.*
-    FROM instructor AS i
-    JOIN course AS c ON i.idinstructor = c.instructor_id
-    WHERE i.idinstructor = ${userId}
-    AND c.course_title LIKE '%${courseName}%';
+    FROM course AS c
+    WHERE c.instructor_id = ?
   `;
 
-  pool.query(sql, (err, result) => {
+  pool.query(sql, [instructorId], (err, result) => {
     if (err) {
-      console.error("Error searching for instructor courses:", err);
-      res
-        .status(500)
-        .json({ error: "Failed to search for instructor courses" });
+      console.error("Error retrieving instructor courses:", err);
+      res.status(500).json({ error: "Failed to retrieve instructor courses" });
       return;
     }
     console.log("Instructor courses found:", result);
     res.json(result);
   });
 });
+
+
 
 // Edit a course details
 router.put("/courses/:courseId", (req, res) => {
