@@ -88,11 +88,15 @@ router.post("/instructors/:instructorId/addCourses", (req, res) => {
         res.status(500).json({ error: "Failed to add the course" });
         return;
       }
+
+      const courseId = result.insertId; // Retrieve the generated course ID
+
       console.log("Course added successfully");
-      res.status(201).json({ message: "Course added successfully" });
+      res.status(201).json({ message: "Course added successfully", courseId: courseId });
     });
   });
 });
+
 
 
 
