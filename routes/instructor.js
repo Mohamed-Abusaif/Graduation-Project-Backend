@@ -129,7 +129,42 @@ router.post("/courses/:courseId/sections", (req, res) => {
     res.status(201).json({ sectionId, message: "Section added successfully" }); // Return the section ID in the response
   });
 });
+//add ar links
+router.post("/sections/:sectionId/addAR", (req, res) => {
+  const sectionId = req.params.sectionId;
+  const { content_text, is_mandatory, time_required_in_sec, is_open_for_free, content_type_idcontent_type } = req.body;
 
+  const content = {
+    pathToContent: content_text,
+    is_mandatory: is_mandatory,
+    time_required_in_sec: time_required_in_sec,
+    is_open_for_free: is_open_for_free,
+    course_chapter_idcourse_chapter: sectionId,
+    content_type_idcontent_type: content_type_idcontent_type, // Include the content_type_idcontent_type value
+  };
+
+  pool.query(
+    "INSERT INTO course_chpater_content SET ?",
+    content,
+    (err, result) => {
+      if (err) {
+        console.error("Error adding the content:", err);
+        res.status(500).json({ error: "Failed to add the content" });
+        return;
+      }
+      const contentId = result.insertId; // Retrieve the generated content ID
+      console.log("Content added successfully");
+      res.status(201).json({ message: "Content added successfully", contentId: contentId });
+    }
+  );
+});
+
+
+
+
+
+
+//add other files
 router.post(
   "/sections/:sectionId/content",
   upload.single("file"),
