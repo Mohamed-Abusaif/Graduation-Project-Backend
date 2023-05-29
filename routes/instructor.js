@@ -49,8 +49,7 @@ router.get("/instructorProfile/:userId", (req, res) => {
 });
 // Add a course
 router.post("/instructors/:instructorId/addCourses", (req, res) => {
-  const { course_title, course_brief, num_of_chapters, course_fee, rating } =
-    req.body;
+  const { course_title, course_brief, num_of_chapters, course_fee } = req.body;
 
   const instructorId = req.params.instructorId;
 
@@ -59,7 +58,7 @@ router.post("/instructors/:instructorId/addCourses", (req, res) => {
     course_brief,
     num_of_chapters,
     course_fee,
-    rating,
+    rating: 0, // Set the default value of the rating field to 0
     instructor_id: instructorId,
   };
 
@@ -98,6 +97,7 @@ router.post("/instructors/:instructorId/addCourses", (req, res) => {
     }
   );
 });
+
 
 // Add a section to a course
 router.post("/courses/:courseId/sections", (req, res) => {
