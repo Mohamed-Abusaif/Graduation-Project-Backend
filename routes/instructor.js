@@ -49,7 +49,8 @@ router.get("/instructorProfile/:userId", (req, res) => {
 });
 // Add a course
 router.post("/instructors/:instructorId/addCourses", (req, res) => {
-  const { course_title, course_brief, num_of_chapters, course_fee } = req.body;
+  const { course_title, course_brief, num_of_chapters, course_fee, rating } =
+    req.body;
 
   const instructorId = req.params.instructorId;
 
@@ -58,9 +59,9 @@ router.post("/instructors/:instructorId/addCourses", (req, res) => {
     course_brief,
     num_of_chapters,
     course_fee,
+    rating,
     instructor_id: instructorId,
   };
-  console.log(course);
 
   // First, check if the specified instructor exists
   pool.query(
@@ -132,7 +133,13 @@ router.post("/courses/:courseId/sections", (req, res) => {
 //add ar links
 router.post("/sections/:sectionId/addAR", (req, res) => {
   const sectionId = req.params.sectionId;
-  const { content_text, is_mandatory, time_required_in_sec, is_open_for_free, content_type_idcontent_type } = req.body;
+  const {
+    content_text,
+    is_mandatory,
+    time_required_in_sec,
+    is_open_for_free,
+    content_type_idcontent_type,
+  } = req.body;
 
   const content = {
     pathToContent: content_text,
@@ -154,15 +161,12 @@ router.post("/sections/:sectionId/addAR", (req, res) => {
       }
       const contentId = result.insertId; // Retrieve the generated content ID
       console.log("Content added successfully");
-      res.status(201).json({ message: "Content added successfully", contentId: contentId });
+      res
+        .status(201)
+        .json({ message: "Content added successfully", contentId: contentId });
     }
   );
 });
-
-
-
-
-
 
 //add other files
 router.post(
