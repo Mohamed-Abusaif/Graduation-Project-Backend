@@ -138,6 +138,9 @@ router.post("/sections/:sectionId/addAR", (req, res) => {
     pathToContent: content_text,
     course_chapter_idcourse_chapter: sectionId,
     content_type_idcontent_type: content_type_idcontent_type,
+    is_mandatory: 0,
+    time_required_in_sec: null,
+    is_open_for_free: 0,
   };
 
   pool.query(
@@ -166,13 +169,21 @@ router.post(
     const file = req.file;
     const sectionId = req.params.sectionId;
 
-    const { content_type_idcontent_type } = req.body;
+    const {
+      content_type_idcontent_type,
+      is_mandatory,
+      time_required_in_sec,
+      is_open_for_free,
+    } = req.body;
 
     const content = {
       course_chapter_idcourse_chapter: sectionId,
-      content_type_idcontent_type,
+      content_type_idcontent_type: content_type_idcontent_type || null,
       pathToContent: file.filename,
       contentItself: null,
+      is_mandatory: is_mandatory || 0,
+      time_required_in_sec: time_required_in_sec || 0,
+      is_open_for_free: is_open_for_free || 0,
     };
 
     pool.query(
