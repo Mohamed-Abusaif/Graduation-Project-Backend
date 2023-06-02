@@ -98,7 +98,6 @@ router.post("/instructors/:instructorId/addCourses", (req, res) => {
   );
 });
 
-
 // Add a section to a course
 router.post("/courses/:courseId/sections", (req, res) => {
   const courseId = req.params.courseId;
@@ -133,21 +132,12 @@ router.post("/courses/:courseId/sections", (req, res) => {
 //add ar links
 router.post("/sections/:sectionId/addAR", (req, res) => {
   const sectionId = req.params.sectionId;
-  const {
-    content_text,
-    is_mandatory,
-    time_required_in_sec,
-    is_open_for_free,
-    content_type_idcontent_type,
-  } = req.body;
+  const { content_text, content_type_idcontent_type } = req.body;
 
   const content = {
     pathToContent: content_text,
-    is_mandatory: is_mandatory,
-    time_required_in_sec: time_required_in_sec,
-    is_open_for_free: is_open_for_free,
     course_chapter_idcourse_chapter: sectionId,
-    content_type_idcontent_type: content_type_idcontent_type, // Include the content_type_idcontent_type value
+    content_type_idcontent_type: content_type_idcontent_type,
   };
 
   pool.query(
@@ -176,17 +166,9 @@ router.post(
     const file = req.file;
     const sectionId = req.params.sectionId;
 
-    const {
-      is_mandatory,
-      time_required_in_sec,
-      is_open_for_free,
-      content_type_idcontent_type,
-    } = req.body;
+    const { content_type_idcontent_type } = req.body;
 
     const content = {
-      is_mandatory,
-      time_required_in_sec,
-      is_open_for_free,
       course_chapter_idcourse_chapter: sectionId,
       content_type_idcontent_type,
       pathToContent: file.filename,
