@@ -236,13 +236,11 @@ router.post("/chooseInterests", async (req, res) => {
     const insertPromises = recommendedCourses.map((course) => {
       const courseData = JSON.stringify(course);
       const sql =
-        "INSERT INTO student_recommended_courses (studentId, CourseData) " +
-        "SELECT ?, ? FROM DUAL WHERE NOT EXISTS " +
-        "(SELECT * FROM student_recommended_courses WHERE studentId = ? AND CourseData = ?)";
+        "INSERT INTO student_recommended_courses (studentId, CourseData) VALUES (?, ?) ON DUPLICATE KEY UPDATE studentId=studentId";
       return new Promise((resolve, reject) => {
         pool.query(
           sql,
-          [studentId, courseData, studentId, courseData],
+          [studentId, courseData],
           (err, result) => {
             if (err) {
               reject(err);
@@ -268,6 +266,7 @@ router.post("/chooseInterests", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // ...
 
