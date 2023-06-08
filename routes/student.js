@@ -215,6 +215,50 @@ router.get("/studentInterests/:studentId", (req, res) => {
 // ...
 // ...
 // ...
+//sent the data using request body 
+router.post('/enroll', (req, res) => {
+  const { student_id, course_id } = req.body;
+
+  const enrollment = {
+    student_id,
+    course_id,
+    enrollment_Date: new Date(),
+    is_paid_subscription: 0
+  };
+
+  const query = 'INSERT INTO enrollment SET ?';
+
+  pool.query(query, enrollment, (err, result) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: 'An error occurred' });
+    } else {
+      const enrollmentId = result.insertId;
+      res.json({ student_id, course_id, enrollmentId });
+    }
+  });
+});
+
+//sent the data using params 
+router.get("/mycourses/:studentId", (req, res) => {
+  const studentId = req.params.studentId;
+
+  const query = `
+    SELECT c.*
+    FROM course c
+    INNER JOIN enrollment e ON e.course_id = c.idcourse
+    WHERE e.student_id = ?
+  `;
+
+  pool.query(query, [studentId], (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: "An error occurred" });
+    } else {
+      res.json(results);
+    }
+  });
+});
 
 router.post("/chooseInterests", async (req, res) => {
   const interests = req.body.interests;
@@ -238,17 +282,13 @@ router.post("/chooseInterests", async (req, res) => {
       const sql =
         "INSERT INTO student_recommended_courses (studentId, CourseData) VALUES (?, ?) ON DUPLICATE KEY UPDATE studentId=studentId";
       return new Promise((resolve, reject) => {
-        pool.query(
-          sql,
-          [studentId, courseData],
-          (err, result) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(result);
-            }
+        pool.query(sql, [studentId, courseData], (err, result) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result);
           }
-        );
+        });
       });
     });
 
@@ -266,7 +306,6 @@ router.post("/chooseInterests", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 // ...
 
