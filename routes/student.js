@@ -50,123 +50,126 @@ router.get("/showCourses", async (req, res) => {
   }
 });
 
-// router.get("/showCourse/:courseId", async (req, res) => {
-//   try {
-//     const query = util.promisify(pool.query).bind(pool);
-//     const courseId = req.params.courseId;
 
-//     const courseSql = `SELECT * FROM course WHERE idcourse = ${courseId}`;
-//     const courseResult = await query(courseSql);
-//     const course = courseResult[0];
+// router.get("/showCourse/:courseId", (req, res) => {
+//   const courseId = req.params.courseId;
 
-//     const sectionsSql = `SELECT * FROM course_chapter WHERE course_idcourse = ${courseId}`;
-//     const sectionsResult = await query(sectionsSql);
+//   const courseSql = `SELECT * FROM course WHERE idcourse = ${courseId}`;
+//   const courseQuery = new Promise((resolve, reject) => {
+//     pool.query(courseSql, (error, courseResult) => {
+//       if (error) {
+//         reject(error);
+//       } else {
+//         resolve(courseResult);
+//       }
+//     });
+//   });
 
-//     const sectionsPromises = sectionsResult.map(async (section) => {
-//       const sectionId = section.idcourse_chapter;
+//   courseQuery
+//     .then((courseResult) => {
+//       const course = courseResult[0];
 
-//       const contentSql = `SELECT * FROM course_chpater_content WHERE course_chapter_idcourse_chapter = ${sectionId}`;
-//       const contentResult = await query(contentSql);
-
-//       const contentPromises = contentResult.map(async (content) => {
-//         const binaryContent = content.contentItself;
-//         const filePath = `../pathToSaveFile/`; // Specify the file path where you want to save the content
-
-//         // Write the binary content to a file
-//         fs.writeFileSync(filePath, binaryContent);
-
-//         // Update the content object with the file path or any other necessary transformation
-//         content.filePath = filePath;
-
-//         return content;
+//       const sectionsSql = `SELECT * FROM course_chapter WHERE course_idcourse = ${courseId}`;
+//       const sectionsQuery = new Promise((resolve, reject) => {
+//         pool.query(sectionsSql, (error, sectionsResult) => {
+//           if (error) {
+//             reject(error);
+//           } else {
+//             resolve(sectionsResult);
+//           }
+//         });
 //       });
 
-//       section.content = await Promise.all(contentPromises);
-//       return section;
+//       sectionsQuery
+//         .then((sectionsResult) => {
+//           const sections = sectionsResult;
+
+//           const sectionsPromises = sections.map((section) => {
+//             const sectionId = section.idcourse_chapter;
+
+//             const contentSql = `SELECT * FROM course_chpater_content WHERE course_chapter_idcourse_chapter = ${sectionId}`;
+//             const contentQuery = new Promise((resolve, reject) => {
+//               pool.query(contentSql, (error, contentResult) => {
+//                 if (error) {
+//                   reject(error);
+//                 } else {
+//                   resolve(contentResult);
+//                 }
+//               });
+//             });
+
+//             return contentQuery.then((contentResult) => {
+//               const content = contentResult[0];
+//               section.content = content;
+//               return section;
+//             });
+//           });
+
+//           Promise.all(sectionsPromises)
+//             .then((sectionsWithContent) => {
+//               course.sections = sectionsWithContent;
+//               res.json(course);
+//             })
+//             .catch((error) => {
+//               console.error(error);
+//               res.status(500).json({ error: "Server error" });
+//             });
+//         })
+//         .catch((error) => {
+//           console.error(error);
+//           res.status(500).json({ error: "Server error" });
+//         });
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//       res.status(500).json({ error: "Server error" });
 //     });
-
-//     course.sections = await Promise.all(sectionsPromises);
-
-//     res.json(course);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Server error" });
-//   }
 // });
 
-router.get("/showCourse/:courseId", (req, res) => {
-  const courseId = req.params.courseId;
 
-  const courseSql = `SELECT * FROM course WHERE idcourse = ${courseId}`;
-  const courseQuery = new Promise((resolve, reject) => {
-    pool.query(courseSql, (error, courseResult) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(courseResult);
-      }
+router.get("/showCourse/:courseId", async (req, res) => {
+  try {
+    const query = util.promisify(pool.query).bind(pool);
+    const courseId = req.params.courseId;
+
+    // Get course data
+    const courseSql = `SELECT * FROM course WHERE idcourse = ${courseId}`;
+    const courseResult = await query(courseSql);
+    if (courseResult.length === 0) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+    
+    const course = courseResult[0];
+
+    // Get sections data
+    const sectionsSql = `SELECT * FROM course_chapter WHERE course_idcourse = ${courseId}`;
+    const sectionsResult = await query(sectionsSql);
+
+    // Map over each section to get the content data
+    const sectionsPromises = sectionsResult.map(async (section) => {
+      const sectionId = section.idcourse_chapter;
+
+      // Get content data
+      const contentSql = `SELECT * FROM course_chpater_content WHERE course_chapter_idcourse_chapter = ${sectionId}`;
+      const contentResult = await query(contentSql);
+
+      // Update section object with content data
+      section.content = contentResult[0];
+
+      return section;
     });
-  });
 
-  courseQuery
-    .then((courseResult) => {
-      const course = courseResult[0];
+    // Wait for all section promises to resolve
+    const sections = await Promise.all(sectionsPromises);
 
-      const sectionsSql = `SELECT * FROM course_chapter WHERE course_idcourse = ${courseId}`;
-      const sectionsQuery = new Promise((resolve, reject) => {
-        pool.query(sectionsSql, (error, sectionsResult) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(sectionsResult);
-          }
-        });
-      });
+    // Update course object with sections data
+    course.sections = sections;
 
-      sectionsQuery
-        .then((sectionsResult) => {
-          const sections = sectionsResult;
-
-          const sectionsPromises = sections.map((section) => {
-            const sectionId = section.idcourse_chapter;
-
-            const contentSql = `SELECT * FROM course_chpater_content WHERE course_chapter_idcourse_chapter = ${sectionId}`;
-            const contentQuery = new Promise((resolve, reject) => {
-              pool.query(contentSql, (error, contentResult) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  resolve(contentResult);
-                }
-              });
-            });
-
-            return contentQuery.then((contentResult) => {
-              const content = contentResult[0];
-              section.content = content;
-              return section;
-            });
-          });
-
-          Promise.all(sectionsPromises)
-            .then((sectionsWithContent) => {
-              course.sections = sectionsWithContent;
-              res.json(course);
-            })
-            .catch((error) => {
-              console.error(error);
-              res.status(500).json({ error: "Server error" });
-            });
-        })
-        .catch((error) => {
-          console.error(error);
-          res.status(500).json({ error: "Server error" });
-        });
-    })
-    .catch((error) => {
-      console.error(error);
-      res.status(500).json({ error: "Server error" });
-    });
+    res.json(course);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 //this route uses params
