@@ -139,7 +139,7 @@ router.post("/sections/:sectionId/addAR", (req, res) => {
     course_chapter_idcourse_chapter: sectionId,
     content_type_idcontent_type: content_type_idcontent_type,
     is_mandatory: 0,
-    time_required_in_sec: null,
+    time_required_in_sec: 0,
     is_open_for_free: 0,
   };
 
