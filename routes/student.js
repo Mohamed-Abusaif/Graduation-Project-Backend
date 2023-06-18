@@ -130,7 +130,7 @@ router.get('/files/:type/:id', async (req, res) => {
         return;
     }
 
-    const [rows] = await connection.query(`SELECT ${column} FROM ${table} WHERE id = ?`, [id]);
+    const [rows] = await pool.query(`SELECT ${column} FROM ${table} WHERE id = ?`, [id]);
 
     if (rows.length === 0) {
       res.sendStatus(404);
