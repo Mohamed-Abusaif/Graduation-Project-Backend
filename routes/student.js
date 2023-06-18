@@ -148,14 +148,6 @@ router.get('/files/:type/:id', (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
 // Define route to get course data
 router.get('/showCourse/:courseId', async (req, res) => {
   try {
