@@ -99,10 +99,53 @@ router.get("/showCourse/:courseId", async (req, res) => {
 
 
 
+router.get('/files/:type/:id', async (req, res) => {
+  const type = req.params.type;
+  const id = req.params.id;
 
+  try {
+    let table, column, folder, contentType;
 
+    switch (type) {
+      case 'photo':
+        table = 'photos';
+        column = 'path';
+        folder = 'photos';
+        contentType = 'image/jpeg';
+        break;
+      case 'video':
+        table = 'videos';
+        column = 'path';
+        folder = 'videos';
+        contentType = 'video/mp4';
+        break;
+      case 'pdf':
+        table = 'pdfs';
+        column = 'path';
+        folder = 'pdfs';
+        contentType = 'application/pdf';
+        break;
+      default:
+        res.sendStatus(404);
+        return;
+    }
 
+    const [rows] = await connection.query(`SELECT ${column} FROM ${table} WHERE id = ?`, [id]);
 
+    if (rows.length === 0) {
+      res.sendStatus(404);
+      return;
+    }
+
+    const filePath = `./uploads/${folder}/${rows[0][column]}`;
+    const fileStream = fs.createReadStream(filePath);
+    res.set('Content-Type', contentType);
+    fileStream.pipe(res);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
 
 
 
