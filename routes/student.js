@@ -98,53 +98,53 @@ router.get("/showCourse/:courseId", async (req, res) => {
 });
 
 
-
-router.get('/files/:type/:id', async (req, res) => {
+router.get('/files/:type/:id', (req, res) => {
   const type = req.params.type;
   const id = req.params.id;
 
-  try {
-    let table, column, folder, contentType;
+  let table, column, folder, contentType;
 
-    switch (type) {
-      case '2':
-        table = 'course_chpater_content';
-        column = 'pathToContent';
-        folder = 'photos';
-        contentType = 'image/jpeg';
-        break;
-      case '4':
-        table = 'course_chpater_content';
-        column = 'pathToContent';
-        folder = 'videos';
-        contentType = 'video/mp4';
-        break;
-      case '1':
-        table = 'course_chpater_content';
-        column = 'pathToContent';
-        folder = 'pdfs';
-        contentType = 'application/pdf';
-        break;
-      default:
-        res.sendStatus(404);
-        return;
+  switch (type) {
+    case '2':
+      table = 'course_chpater_content';
+      column = 'pathToContent';
+      folder = 'photos';
+      contentType = 'image/jpeg';
+      break;
+    case '4':
+      table = 'course_chpater_content';
+      column = 'pathToContent';
+      folder = 'videos';
+      contentType = 'video/mp4';
+      break;
+    case '1':
+      table = 'course_chpater_content';
+      column = 'pathToContent';
+      folder = 'pdfs';
+      contentType = 'application/pdf';
+      break;
+    default:
+      res.sendStatus(404);
+      return;
+  }
+
+  pool.query(`SELECT * FROM ${table} WHERE pathToContent = ?`, [id], (error, results, fields) => {
+    if (error) {
+      console.error(error);
+      res.sendStatus(500);
+      return;
     }
 
-    const [rows] = await pool.query(`SELECT * FROM ${table} WHERE pathToContent = ?`, [id]);
-
-    if (rows.length === 0) {
+    if (results.length === 0) {
       res.sendStatus(404);
       return;
     }
 
-    const filePath = `./uploads/${rows[0][column]}`;
+    const filePath = `./uploads/${results[0][column]}`;
     const fileStream = fs.createReadStream(filePath);
     res.set('Content-Type', contentType);
     fileStream.pipe(res);
-  } catch (err) {
-    console.error(err);
-    res.sendStatus(500);
-  }
+  });
 });
 
 
