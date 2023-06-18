@@ -108,20 +108,20 @@ router.get('/files/:type/:id', async (req, res) => {
 
     switch (type) {
       case '2':
-        table = 'photos';
-        column = 'path';
+        table = 'course_chpater_content';
+        column = 'pathToContent';
         folder = 'photos';
         contentType = 'image/jpeg';
         break;
       case '4':
-        table = 'videos';
-        column = 'path';
+        table = 'course_chpater_content';
+        column = 'pathToContent';
         folder = 'videos';
         contentType = 'video/mp4';
         break;
       case '1':
-        table = 'pdfs';
-        column = 'path';
+        table = 'course_chpater_content';
+        column = 'pathToContent';
         folder = 'pdfs';
         contentType = 'application/pdf';
         break;
@@ -130,7 +130,7 @@ router.get('/files/:type/:id', async (req, res) => {
         return;
     }
 
-    const [rows] = await pool.query(`SELECT ${column} FROM ${table} WHERE id = ?`, [id]);
+    const [rows] = await pool.query(`SELECT * FROM ${table} WHERE pathToContent = ?`, [id]);
 
     if (rows.length === 0) {
       res.sendStatus(404);
