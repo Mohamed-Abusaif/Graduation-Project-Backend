@@ -113,6 +113,62 @@ router.get("/showCourse/:courseId", async (req, res) => {
 
 
 
+// Define route to get course data
+router.get('/showCourse/:courseId', async (req, res) => {
+  try {
+    const query = util.promisify(pool.query).bind(pool);
+    const courseId = req.params.courseId;
+
+    // Get course data
+    const courseSql = `SELECT * FROM course WHERE idcourse = ${courseId}`;
+    const courseResult = await query(courseSql);
+    if (courseResult.length === 0) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+    
+    const course = courseResult[0];
+
+    // Get sections data
+    const sectionsSql = `SELECT * FROM course_chapter WHERE course_idcourse = ${courseId}`;
+    const sectionsResult = await query(sectionsSql);
+
+    // Map over each section to get the content data
+    const sectionsPromises = sectionsResult.map(async (section) => {
+      const sectionId = section.idcourse_chapter;
+
+      // Get content data
+      const contentSql = `SELECT * FROM course_chpater_content WHERE course_chapter_idcourse_chapter = ${sectionId}`;
+      const contentResult = await query(contentSql);
+
+      // Loop through all content results and add file data to the array
+      for (let i = 0; i < contentResult.length; i++) {
+        const filePath = contentResult[i].pathToContent;
+        const fileData = fs.readFileSync(filePath);
+
+        // Add file data to the content object
+        contentResult[i].fileData = fileData;
+      }
+
+      // Update section object with content data
+      section.content = contentResult;
+
+      return section;
+    });
+
+    // Wait for all section promises to resolve
+    const sections = await Promise.all(sectionsPromises);
+
+    // Update course object with sections data
+    course.sections = sections;
+
+    res.json(course);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 
 
 
