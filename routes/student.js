@@ -107,19 +107,19 @@ router.get('/files/:type/:id', async (req, res) => {
     let table, column, folder, contentType;
 
     switch (type) {
-      case 'photo':
+      case '2':
         table = 'photos';
         column = 'path';
         folder = 'photos';
         contentType = 'image/jpeg';
         break;
-      case 'video':
+      case '4':
         table = 'videos';
         column = 'path';
         folder = 'videos';
         contentType = 'video/mp4';
         break;
-      case 'pdf':
+      case '1':
         table = 'pdfs';
         column = 'path';
         folder = 'pdfs';
