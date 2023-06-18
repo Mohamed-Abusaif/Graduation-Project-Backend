@@ -137,7 +137,7 @@ router.get('/files/:type/:id', async (req, res) => {
       return;
     }
 
-    const filePath = `./uploads/${folder}/${rows[0][column]}`;
+    const filePath = `./uploads/${rows[0][column]}`;
     const fileStream = fs.createReadStream(filePath);
     res.set('Content-Type', contentType);
     fileStream.pipe(res);
