@@ -52,55 +52,6 @@ router.get("/showCourses", async (req, res) => {
 
 
 //the best one till now
-// router.get("/showCourse/:courseId", async (req, res) => {
-//   try {
-//     const query = util.promisify(pool.query).bind(pool);
-//     const courseId = req.params.courseId;
-
-//     // Get course data
-//     const courseSql = `SELECT * FROM course WHERE idcourse = ${courseId}`;
-//     const courseResult = await query(courseSql);
-//     if (courseResult.length === 0) {
-//       return res.status(404).json({ error: "Course not found" });
-//     }
-    
-//     const course = courseResult[0];
-
-//     // Get sections data
-//     const sectionsSql = `SELECT * FROM course_chapter WHERE course_idcourse = ${courseId}`;
-//     const sectionsResult = await query(sectionsSql);
-
-//     // Map over each section to get the content data
-//     const sectionsPromises = sectionsResult.map(async (section) => {
-//       const sectionId = section.idcourse_chapter;
-
-//       // Get content data
-//       const contentSql = `SELECT * FROM course_chpater_content WHERE course_chapter_idcourse_chapter = ${sectionId}`;
-//       const contentResult = await query(contentSql);
-
-//       // Update section object with content data
-//       section.content = contentResult[0];
-
-//       return section;
-//     });
-
-//     // Wait for all section promises to resolve
-//     const sections = await Promise.all(sectionsPromises);
-
-//     // Update course object with sections data
-//     course.sections = sections;
-
-//     res.json(course);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// });
-
-
-
-
-
 router.get("/showCourse/:courseId", async (req, res) => {
   try {
     const query = util.promisify(pool.query).bind(pool);
@@ -119,21 +70,25 @@ router.get("/showCourse/:courseId", async (req, res) => {
     const sectionsSql = `SELECT * FROM course_chapter WHERE course_idcourse = ${courseId}`;
     const sectionsResult = await query(sectionsSql);
 
-    // Create an array of file paths
-    const filePaths = [];
+    // Map over each section to get the content data
+    const sectionsPromises = sectionsResult.map(async (section) => {
+      const sectionId = section.idcourse_chapter;
 
-    for (const section of sectionsResult) {
-      const contentSql = `SELECT * FROM course_chpater_content WHERE course_chapter_idcourse_chapter = ${section.idcourse_chapter}`;
+      // Get content data
+      const contentSql = `SELECT * FROM course_chpater_content WHERE course_chapter_idcourse_chapter = ${sectionId}`;
       const contentResult = await query(contentSql);
-      console.log(contentResult[0])
-      const filePath = contentResult[0].pathToContent;
-      filePaths.push(path.join(__dirname, "uploads", filePath));
-    }
 
-    // Download each file using res.download
-    for (const filePath of filePaths) {
-      res.download(filePath);
-    }
+      // Update section object with content data
+      section.content = contentResult[0];
+
+      return section;
+    });
+
+    // Wait for all section promises to resolve
+    const sections = await Promise.all(sectionsPromises);
+
+    // Update course object with sections data
+    course.sections = sections;
 
     res.json(course);
   } catch (error) {
@@ -141,6 +96,8 @@ router.get("/showCourse/:courseId", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+
 
 
 
