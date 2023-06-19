@@ -272,22 +272,34 @@ router.post('/enroll', (req, res) => {
   const enrollment = {
     student_id,
     course_id,
-    enrollment_Date: new Date(),
-    is_paid_subscription: 0
+    enrollment_date: new Date(),
+    is_paid_subscription: '0'
   };
 
-  const query = 'INSERT INTO enrollment SET ?';
+  const selectQuery = 'SELECT * FROM enrollment WHERE student_id = ? AND course_id = ?';
 
-  pool.query(query, enrollment, (err, result) => {
+  pool.query(selectQuery, [student_id, course_id], (err, result) => {
     if (err) {
       console.error(err);
       res.status(500).json({ error: 'An error occurred' });
+    } else if (result.length > 0) {
+      res.status(400).json({ error: 'You Are Already Enrolled' });
     } else {
-      const enrollmentId = result.insertId;
-      res.json({ student_id, course_id, enrollmentId });
+      const insertQuery = 'INSERT INTO enrollment SET ?';
+
+      pool.query(insertQuery, enrollment, (err, result) => {
+        if (err) {
+          console.error(err);
+          res.status(500).json({ error: 'An error occurred' });
+        } else {
+          const enrollmentId = result.insertId;
+          res.json({ student_id, course_id, enrollmentId });
+        }
+      });
     }
   });
 });
+
 
 //sent the data using params 
 router.get("/mycourses/:studentId", (req, res) => {
